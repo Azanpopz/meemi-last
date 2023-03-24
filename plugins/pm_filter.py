@@ -23,9 +23,6 @@ from utils import get_size, is_subscribed, get_poster, search_gagala, temp, get_
 from database.users_chats_db import db
 
 from database.ia_filterdb import Media, get_file_details, get_search_results, get_bad_files
-pyrogram.raw.types.KeyboardButton
-
-from pyrogram.types import InlineKeyboardButton
 
 from database.filters_mdb import (
     del_all,
@@ -102,6 +99,7 @@ async def fil_mod(client, message):
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client,message):
+    
     await global_filters(client, message)
     group_id = message.chat.id
     name = message.text
@@ -417,6 +415,7 @@ async def advantage_spoll_choker(bot, query):
             k = (movie, files, offset, total_results)
             await auto_filter(bot, query, k)
         else:
+            mv_rqst = query.msg.text
             reqstr1 = query.from_user.id if query.from_user else 0
             reqstr = await bot.get_users(reqstr1)
             if NO_RESULTS_MSG:
@@ -425,7 +424,6 @@ async def advantage_spoll_choker(bot, query):
             await asyncio.sleep(10)
             await k.delete()
             
-
 #languages
 
             
@@ -1889,8 +1887,14 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
 
 async def auto_filter(client, msg, spoll=False):
+
+#    chat_id = msg.chat.id
+    mv_rqst = msg.text
+    message = msg
+    searchh = message.text                 
     reqstr1 = msg.from_user.id if msg.from_user else 0
-    reqstr = await client.get_users(reqstr1)
+    reqstr = await client.get_users(reqstr1)   
+    imdb = await get_poster(searchh) if IMDB else None    
     if not spoll:
         message = msg        
         settings = await get_settings(message.chat.id)
@@ -1915,6 +1919,7 @@ async def auto_filter(client, msg, spoll=False):
         else:
             return
     else:
+        imdb = await get_poster(search) if IMDB else None
         message = msg.message.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
     settings = await get_settings(message.chat.id)
@@ -2021,8 +2026,14 @@ async def auto_filter(client, msg, spoll=False):
             )
     
 
-
     btn.insert(0, [
+        InlineKeyboardButton("🏷️𝐂𝐡𝐚𝐧𝐧𝐞𝐥", url="https://t.me/nasrani_update"),
+        InlineKeyboardButton("𝐈𝐧𝐟𝐨", "shows"),
+        InlineKeyboardButton("𝐒𝐞𝐚𝐫𝐜𝐡🏷️", url=f"https://www.google.com/search?q={search}")
+    ])
+
+
+    btn.insert(1, [
         InlineKeyboardButton(f'⚕️𝐅𝐢𝐥𝐞𝐬: {total_results}⚕️', 'autos'),
         InlineKeyboardButton(f'♻️𝐍𝐞𝐰 𝐌𝐨𝐯𝐢𝐞𝐬♻️', url='https://t.me/nasrani_update')
     ])
@@ -2040,8 +2051,11 @@ async def auto_filter(client, msg, spoll=False):
 #    await px.edit_text(text=E)
 #    await px.edit_text(text=F)                                              
 #    await px.delete()
-                                                  
-
+                                                 
+    m=await message.reply_text("🔍") 
+    await asyncio.sleep(2)
+    await m.delete()
+        
 
 
     if offset != "":
@@ -2186,8 +2200,14 @@ async def auto_filter(client, msg, spoll=False):
                     await asyncio.sleep(300)
                     await fuk.delete()
                     await message.delete()
-                
-
+                k = await message.reply_photo(
+                    photo=random.choice(SP),
+                    caption=f"⚙️ {message.from_user.mention} Fɪʟᴛᴇʀ Fᴏʀ {search} Cʟᴏꜱᴇᴅ 🗑️",
+                    reply_markup=InlineKeyboardMarkup(buttons)
+                )
+                await asyncio.sleep(60)                   
+                await k.delete()
+                await message.delete() 
 
     if spoll:
         await msg.message.delete()
@@ -2214,8 +2234,9 @@ async def advantage_spell_chok(client, msg):
         logger.exception(e)
         await client.send_message(chat_id=LOG_CHANNEL, text=(script.NORSLTS.format(reqstr.id, reqstr.mention, mv_rqst)))
         k = await msg.reply(script.I_CUDNT.format(reqstr.mention))
-        await asyncio.sleep(8)
+        await asyncio.sleep(120)
         await k.delete()
+        await msg.delete()
         return
     movielist = []
     if not movies:
@@ -2232,6 +2253,7 @@ async def advantage_spell_chok(client, msg):
         )
         await asyncio.sleep(30)
         await k.delete()
+        await msg.delete()
                
         return
 #    movielist += [movie.get('title') for movie in movies]
@@ -2280,8 +2302,9 @@ async def advantage_spell_chok(client, msg):
     ])
 
     
-    k = await msg.reply_sticker("CAACAgUAAx0CQTCW0gABB5EUYkx6-OZS7qCQC6kNGMagdQOqozoAAgQAA8EkMTGJ5R1uC7PIECME") 
-    
+    m=await msg.reply_sticker("CAACAgUAAx0CQTCW0gABB5EUYkx6-OZS7qCQC6kNGMagdQOqozoAAgQAA8EkMTGJ5R1uC7PIECME") 
+    await asyncio.sleep(2)
+    await m.delete()
     
     await asyncio.sleep(1)
 
@@ -2290,7 +2313,10 @@ async def advantage_spell_chok(client, msg):
         caption=(script.CUDNT_FND.format(mv_rqst)),
         reply_markup=InlineKeyboardMarkup(btn),
         reply_to_message_id=msg.id
-    )    
+    )
+    await asyncio.sleep(120)
+    await spell_check_del.delete()
+    await msg.delete()
 
 def build_keyboard(buttons):
     keyb = []
